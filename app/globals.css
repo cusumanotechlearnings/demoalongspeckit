@@ -1,26 +1,30 @@
 @import "tailwindcss";
 
+/* Synthesis: Modern Laboratory design system — dark calming blue primary, green accent */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --surface: #0f172a;       /* Deep Slate — calm, focused */
+  --primary: #1e40af;      /* Dark calming blue — main actions, nav, buttons */
+  --secondary: #10b981;    /* Emerald green — accent, highlights, progress */
+  --text-primary: #f8fafc; /* Off-white */
+  --text-muted: #94a3b8;   /* Muted blue-grey */
+  --background: #0f172a;
+  --foreground: #f8fafc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }

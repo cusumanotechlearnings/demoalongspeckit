@@ -1,0 +1,31 @@
+# demoalongspeckit Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-01
+
+## Active Technologies
+- PostgreSQL (Vercel Postgres, Neon, or Supabase); file/blob storage for uploads (Vercel Blob or S3-compatible) (001-synthesis-web-app)
+
+- TypeScript 5.x, Next.js 16.x, React 19.x + Next.js (App Router), React, Tailwind CSS 4, serverless API routes (Next.js Route Handlers), PostgreSQL client (e.g. `@vercel/postgres` or `pg`), external AI API (e.g. OpenAI-compatible) (001-synthesis-web-app)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript 5.x, Next.js 16.x, React 19.x: Follow standard conventions
+
+## Recent Changes
+- 001-synthesis-web-app: Added TypeScript 5.x, Next.js 16.x, React 19.x + Next.js (App Router), React, Tailwind CSS 4, serverless API routes (Next.js Route Handlers), PostgreSQL client (e.g. `@vercel/postgres` or `pg`), external AI API (e.g. OpenAI-compatible)
+
+- 001-synthesis-web-app: Added TypeScript 5.x, Next.js 16.x, React 19.x + Next.js (App Router), React, Tailwind CSS 4, serverless API routes (Next.js Route Handlers), PostgreSQL client (e.g. `@vercel/postgres` or `pg`), external AI API (e.g. OpenAI-compatible)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
