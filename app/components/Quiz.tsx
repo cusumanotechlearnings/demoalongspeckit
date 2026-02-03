@@ -147,7 +147,7 @@ export function Quiz({ items, onComplete, onSaveResults, instructions, clientSid
       const res = await fetch("/api/instant-challenge/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers: mcqAnswers }),
       });
       const data = await res.json();
       if (!res.ok) {
