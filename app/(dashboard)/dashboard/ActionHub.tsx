@@ -1,63 +1,108 @@
 "use client";
 
 /**
- * Action Hub: Learning Architect (Socratic) overlay and Quick Dictate "I want a test on X" (T023, T024).
- * Learning Architect opens overlay; Quick Dictate POSTs to /api/assignments and navigates to workbench (T027).
+ * Action Hub: Quick Dictate only — "I want to learn about X" + format dropdown.
+ * Creates assignment via POST /api/assignments and navigates to workbench.
  */
 
 import { useState } from "react";
-import { LearningArchitectOverlay } from "./LearningArchitectOverlay";
+import { useRouter } from "next/navigation";
 
-export function ActionHub({ resourceSummary = "" }: { resourceSummary?: string }) {
-  const [quickDictate, setQuickDictate] = useState("");
-  const [learningArchitectOpen, setLearningArchitectOpen] = useState(false);
+const FORMAT_OPTIONS = [
+  { value: "multiple_choice", label: "Multiple choice test" },
+  { value: "mixed_format", label: "Mixed format quick test (short answer & multiple choice)" },
+  { value: "short_answers", label: "Test of short answers" },
+  { value: "case_study", label: "Case study" },
+  { value: "project", label: "Project" },
+  { value: "presentation", label: "Presentation" },
+  { value: "essay", label: "Essay" },
+] as const;
 
-  const handleQuickDictate = (e: React.FormEvent) => {
+export function ActionHub() {
+  const router = useRouter();
+  const [topic, setTopic] = useState("");
+  const [format, setFormat] = useState<string>(FORMAT_OPTIONS[0].value);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const topic = quickDictate.trim();
-    if (!topic) return;
-    window.location.href = `/dashboard/quick-dictate?topic=${encodeURIComponent(topic)}`;
+    const t = topic.trim();
+    if (!t) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: t,
+          format: format || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.status === 201 && data.id) {
+        router.push(`/dashboard/workbench/${data.id}`);
+        return;
+      }
+      setError(data.error ?? "Could not create assignment. Please try again.");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <section className="rounded-xl border border-[var(--text-muted)]/20 bg-[var(--surface)] p-6">
-      <LearningArchitectOverlay
-        open={learningArchitectOpen}
-        onClose={() => setLearningArchitectOpen(false)}
-        userContextSummary={resourceSummary}
-      />
-      <h2 className="mb-4 text-lg font-bold text-[var(--text-primary)]">
+      <h2 className="mb-2 text-lg font-bold text-[var(--text-primary)]">
         Action Hub
       </h2>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
-        <button
-          type="button"
-          onClick={() => setLearningArchitectOpen(true)}
-          className="inline-flex items-center justify-center rounded-lg bg-[var(--primary)] px-4 py-2.5 font-medium text-white hover:opacity-90"
-        >
-          Learning Architect
-        </button>
-        <form onSubmit={handleQuickDictate} className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-end">
-          <label className="flex flex-1 flex-col gap-1">
-            <span className="text-sm text-[var(--text-muted)]">
-              Quick Dictate
-            </span>
-            <input
-              type="text"
-              placeholder='e.g. "I want a test on React hooks"'
-              value={quickDictate}
-              onChange={(e) => setQuickDictate(e.target.value)}
-              className="rounded-lg border border-[var(--text-muted)]/30 bg-transparent px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:outline-none"
-            />
-          </label>
-          <button
-            type="submit"
-            className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-medium text-white hover:opacity-90"
+      <p className="mb-4 text-sm text-[var(--text-muted)]">
+        <strong>Quick Dictate</strong> — Tell us what you want to learn and the format you prefer. We’ll generate an assignment you can start right away.
+      </p>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-[var(--text-primary)]">
+            I want to learn about…
+          </span>
+          <input
+            type="text"
+            placeholder="e.g. React hooks, product positioning, financial modeling"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            className="rounded-lg border border-[var(--text-muted)]/30 bg-transparent px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:outline-none"
+            disabled={loading}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-[var(--text-primary)]">
+            Assignment format
+          </span>
+          <select
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            className="rounded-lg border border-[var(--text-muted)]/30 bg-[var(--surface)] px-3 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
+            disabled={loading}
           >
-            Generate
-          </button>
-        </form>
-      </div>
+            {FORMAT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {error && (
+          <p className="text-sm text-[var(--accent)]">{error}</p>
+        )}
+        <button
+          type="submit"
+          disabled={loading || !topic.trim()}
+          className="w-fit rounded-lg bg-[var(--accent)] px-4 py-2.5 font-medium text-white hover:opacity-90 disabled:opacity-50"
+        >
+          {loading ? "Creating…" : "Generate assignment"}
+        </button>
+      </form>
     </section>
   );
 }

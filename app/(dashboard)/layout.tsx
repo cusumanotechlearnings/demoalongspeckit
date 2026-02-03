@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { DashboardNav } from "./DashboardNav";
 
 /**
- * Dashboard layout: sidebar (Dashboard, Resource Library, Assignment History, Peer Directory).
+ * Dashboard layout: sidebar (Dashboard, Interest Library, Assignment History).
  * Unauthenticated users are redirected to sign-in.
  */
 export default async function DashboardLayout({

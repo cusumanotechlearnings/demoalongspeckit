@@ -3,9 +3,8 @@ import { SignOutButton } from "./SignOutButton";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard (Home)" },
-  { href: "/dashboard/resources", label: "Resource Library" },
+  { href: "/dashboard/resources", label: "Interest Library" },
   { href: "/dashboard/assignment-history", label: "Assignment History" },
-  { href: "/dashboard/peer-directory", label: "Peer Directory" },
 ];
 
 export function DashboardNav() {

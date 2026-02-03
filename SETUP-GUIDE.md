@@ -101,6 +101,8 @@ Pick one of these (all have free tiers):
    - **Supabase:** Go to **SQL Editor** → **New query**, paste the script, and run it.
 4. You should see a success message (e.g. “Success” or “Query executed”). You only need to do this once per database.
 
+**If you already ran the schema before:** The app now uses password-based login and forgot-password. Run the migration script **`lib/db/migrations/001_add_passwords.sql`** in your database's SQL editor (same way as above). This adds the password fields and reset-token table.
+
 ---
 
 ## Step 5: Get an AI API Key (OpenAI)
@@ -159,9 +161,16 @@ OPENAI_API_KEY="sk-your-actual-key-here"
 
 # Optional — only if you set up Blob in Step 6
 BLOB_READ_WRITE_TOKEN="vercel_blob_rw_your-token-here"
+
+# Optional — for "Forgot password" emails (Resend). Get a key at https://resend.com
+# RESEND_API_KEY="re_xxxx"
+# EMAIL_FROM="The Forge <onboarding@resend.dev>"
+# NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
 4. Save the file and close it. You’re done with setup.
+
+**Forgot password:** To send reset-link emails, add `RESEND_API_KEY` (from [Resend](https://resend.com)) and optionally `EMAIL_FROM` and `NEXT_PUBLIC_APP_URL`. Without these, "Forgot password" will respond successfully but no email is sent.
 
 ---
 

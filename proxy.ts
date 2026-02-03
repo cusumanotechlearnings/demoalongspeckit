@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 /**
  * Redirect signed-in users from the homepage to the dashboard.
  */
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   if (req.nextUrl.pathname !== "/") {
     return NextResponse.next();
   }

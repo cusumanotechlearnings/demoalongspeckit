@@ -1,5 +1,5 @@
 /**
- * Assignment History: list assignments and submissions (past attempts and retakes) (T031).
+ * Assignment History: list assignments and submissions; Quick Dictate + Learning Architect on page.
  */
 
 import { getServerSession } from "next-auth";
@@ -7,10 +7,21 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import Link from "next/link";
+import { AssignmentHistoryActions } from "./AssignmentHistoryActions";
 
 export default async function AssignmentHistoryPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard/assignment-history");
+
+  const { rows: resourceTopics } = await query<{ extracted_topics: string[] }>(
+    `SELECT extracted_topics FROM resources WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+    [session.user.id]
+  );
+  const resourceSummary = resourceTopics
+    .flatMap((r) => r.extracted_topics ?? [])
+    .filter(Boolean)
+    .slice(0, 30)
+    .join(", ");
 
   const { rows: assignments } = await query<{
     id: string;
@@ -57,9 +68,10 @@ export default async function AssignmentHistoryPage() {
       <h1 className="text-2xl font-bold text-[var(--text-primary)]">
         Assignment History
       </h1>
+      <AssignmentHistoryActions resourceSummary={resourceSummary} />
       {assignments.length === 0 ? (
         <p className="text-[var(--text-muted)]">
-          No assignments yet. Use Quick Dictate or Learning Architect to create one.
+          No assignments yet. Use the section above to create one.
         </p>
       ) : (
         <ul className="space-y-4">

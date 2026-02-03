@@ -74,7 +74,17 @@ export async function POST(req: NextRequest) {
 
   await ensureUser(session.user.id, session.user.email, session.user.name);
 
-  let body: { topic?: string; resourceIds?: string[] };
+  const FORMATS = [
+    "multiple_choice",
+    "mixed_format",
+    "short_answers",
+    "case_study",
+    "project",
+    "presentation",
+    "essay",
+  ] as const;
+
+  let body: { topic?: string; resourceIds?: string[]; format?: string };
   try {
     body = await req.json();
   } catch {
@@ -90,9 +100,14 @@ export async function POST(req: NextRequest) {
     ? body.resourceIds.filter((id): id is string => typeof id === "string")
     : [];
 
+  const format =
+    typeof body.format === "string" && FORMATS.includes(body.format as (typeof FORMATS)[number])
+      ? (body.format as (typeof FORMATS)[number])
+      : undefined;
+
   let assignmentMeta: { title: string; prompt: string; type: "instant_mcq" | "case_study" | "long_form" };
   try {
-    assignmentMeta = await createAssignmentFromTopic(topic, resourceIds);
+    assignmentMeta = await createAssignmentFromTopic(topic, resourceIds, format);
   } catch (e) {
     console.error("createAssignmentFromTopic failed", e);
     return serviceUnavailable("Assignment generation is temporarily unavailable. Please try again.");

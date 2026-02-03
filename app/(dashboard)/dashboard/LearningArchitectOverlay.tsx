@@ -1,11 +1,13 @@
 "use client";
 
 /**
- * Learning Architect overlay: chat UI (messages + input), open/close from Action Hub (T024).
- * Calls POST /api/learning-architect/chat for Socratic suggestions (quiz vs case study).
+ * Learning Architect overlay: chat UI (messages + input).
+ * Calls POST /api/learning-architect/chat for Socratic suggestions.
+ * When allowGenerateFromChat, shows "Let's learn" to generate assignment from conversation.
  */
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -13,11 +15,15 @@ export function LearningArchitectOverlay({
   open,
   onClose,
   userContextSummary,
+  allowGenerateFromChat = false,
 }: {
   open: boolean;
   onClose: () => void;
   userContextSummary: string;
+  allowGenerateFromChat?: boolean;
 }) {
+  const router = useRouter();
+  const [generating, setGenerating] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -72,6 +78,30 @@ export function LearningArchitectOverlay({
     }
   };
 
+  const handleLetsLearn = async () => {
+    if (messages.length <= 1 || generating) return;
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/learning-architect/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversation: messages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await res.json();
+      if (res.status === 201 && data.id) {
+        onClose();
+        router.push(`/dashboard/workbench/${data.id}`);
+        return;
+      }
+    } catch {
+      // Keep overlay open
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -117,6 +147,21 @@ export function LearningArchitectOverlay({
           )}
           <div ref={bottomRef} />
         </div>
+        {allowGenerateFromChat && messages.length > 1 && (
+          <div className="border-t border-[var(--text-muted)]/20 px-4 py-3 flex gap-2">
+            <button
+              type="button"
+              onClick={handleLetsLearn}
+              disabled={generating}
+              className="rounded-lg bg-[var(--accent)] px-4 py-2 font-medium text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {generating ? "Generating…" : "Let's learn"}
+            </button>
+            <span className="text-xs text-[var(--text-muted)] self-center">
+              Generate an assignment from this conversation
+            </span>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="border-t border-[var(--text-muted)]/20 p-4">
           <div className="flex gap-2">
             <input
