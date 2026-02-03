@@ -211,6 +211,26 @@ Before you run the app, make sure you’ve done the following:
 
 ---
 
+## Deploying to Vercel
+
+If you deploy this app to Vercel and see **“Server error” at `/api/auth/error`** when signing in, the cause is usually missing or wrong environment variables in the Vercel project.
+
+**In Vercel: Project → Settings → Environment Variables**, add (for Production, and optionally Preview/Development):
+
+| Variable | Example / notes |
+|----------|------------------|
+| **NEXTAUTH_URL** | `https://your-app.vercel.app` — **no trailing slash**. Use your real Vercel URL. |
+| **NEXTAUTH_SECRET** | Same value as in `.env.local` (the long random string from Step 2). |
+| **DATABASE_URL** or **POSTGRES_URL** | Your production Postgres connection string (e.g. Vercel Postgres, Neon, Supabase). |
+| **OPENAI_API_KEY** | Your OpenAI API key (needed for assignments and AI). |
+| **BLOB_READ_WRITE_TOKEN** | Optional; only if you use file uploads in production. |
+
+After changing environment variables, **redeploy** the project (Deployments → … → Redeploy).
+
+Also ensure your **production database** has the same schema as local (run `lib/db/schema.sql` and any migrations in `lib/db/migrations/` against the production DB).
+
+---
+
 ## What If Something Goes Wrong?
 
 - **“OPENAI_API_KEY is missing”**  
@@ -223,7 +243,8 @@ Before you run the app, make sure you’ve done the following:
   Either `DATABASE_URL` in `.env.local` is wrong, or you didn’t run the SQL script from `lib/db/schema.sql` in your database (Step 4).
 
 - **“Sign in doesn’t work” or session errors**  
-  Check that `NEXTAUTH_URL` is `http://localhost:3000` when running locally and that `NEXTAUTH_SECRET` is set (Step 2).
+  Locally: check that `NEXTAUTH_URL` is `http://localhost:3000` and `NEXTAUTH_SECRET` is set (Step 2).  
+  On Vercel: see **Deploying to Vercel** above — set `NEXTAUTH_URL` to your production URL (e.g. `https://your-app.vercel.app`) and ensure `NEXTAUTH_SECRET` and `DATABASE_URL`/`POSTGRES_URL` are set in the Vercel project.
 
 - **File upload fails**  
   Add `BLOB_READ_WRITE_TOKEN` to `.env.local` (Step 6). Until then, only text resources work.

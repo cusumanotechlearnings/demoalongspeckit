@@ -115,11 +115,13 @@ export async function POST(req: NextRequest) {
 
   const id = randomUUID();
   const { title, prompt, type } = assignmentMeta;
+  const rubricId =
+    type === "case_study" ? "rubric-case-study" : type === "long_form" ? "rubric-long-form" : null;
 
   await execute(
-    `INSERT INTO assignments (id, user_id, type, title, prompt, resource_ids, status)
-     VALUES ($1, $2, $3, $4, $5, $6, 'draft')`,
-    [id, session.user.id, type, title, prompt, resourceIds]
+    `INSERT INTO assignments (id, user_id, type, title, prompt, resource_ids, status, format, topic, rubric_id)
+     VALUES ($1, $2, $3, $4, $5, $6, 'draft', $7, $8, $9)`,
+    [id, session.user.id, type, title, prompt, resourceIds, format ?? null, topic || null, rubricId]
   );
 
   const row = await query<{
