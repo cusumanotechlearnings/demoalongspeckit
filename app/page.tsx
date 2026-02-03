@@ -64,13 +64,13 @@ export default function Home() {
               href="/auth/signin?callbackUrl=/dashboard"
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             >
-              Sign in
+              Sign up
             </Link>
             <Link
-              href="/auth/signin?callbackUrl=/dashboard"
+              href="#try-a-test"
               className="rounded-lg bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
             >
-              Create account
+              Try a test
             </Link>
           </>
         ) : (
@@ -105,13 +105,13 @@ export default function Home() {
                   href="/auth/signin?callbackUrl=/dashboard"
                   className="w-full rounded-lg bg-[var(--primary)] px-6 py-3 text-center font-medium text-white hover:opacity-90 sm:w-auto"
                 >
-                  Create account
+                  Create an account
                 </Link>
                 <Link
-                  href="/auth/signin?callbackUrl=/dashboard"
+                  href="#try-a-test"
                   className="w-full rounded-lg border border-[var(--text-muted)]/40 bg-[var(--surface)] px-6 py-3 text-center font-medium text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] sm:w-auto"
                 >
-                  Sign in
+                  Try a test
                 </Link>
               </>
             ) : (
@@ -126,7 +126,7 @@ export default function Home() {
         </section>
 
         {/* Try a test — lower on page */}
-        <section className="mt-16 border-t border-[var(--text-muted)]/20 pt-12">
+        <section id="try-a-test" className="mt-16 border-t border-[var(--text-muted)]/20 pt-12 scroll-mt-6">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             Try a test
           </h2>

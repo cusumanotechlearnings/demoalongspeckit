@@ -140,14 +140,64 @@ export async function getLearningArchitectSuggestion(
 }
 
 /**
+ * Derive a short topic/summary from a Learning Architect conversation for assignment generation.
+ */
+export async function getTopicFromConversation(
+  messages: { role: string; content: string }[]
+): Promise<string> {
+  const openai = getOpenAI();
+  const transcript = messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+    .join("\n\n");
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          "Based on this learning conversation, output a single short topic or learning goal (one short phrase or sentence) that could be used to generate an assignment. Examples: 'React hooks', 'Product positioning for B2B', 'Financial statement analysis'. No preamble, just the topic.",
+      },
+      { role: "user", content: transcript.slice(0, 6000) },
+    ],
+  });
+  const topic = response.choices[0]?.message?.content?.trim();
+  return topic && topic.length > 0 ? topic : "Custom assignment from conversation";
+}
+
+/** Format hint for assignment generation (UI dropdown). Maps to DB type. */
+export type AssignmentFormat =
+  | "multiple_choice"
+  | "mixed_format"
+  | "short_answers"
+  | "case_study"
+  | "project"
+  | "presentation"
+  | "essay";
+
+const FORMAT_TO_TYPE: Record<AssignmentFormat, "instant_mcq" | "case_study" | "long_form"> = {
+  multiple_choice: "instant_mcq",
+  mixed_format: "instant_mcq",
+  short_answers: "long_form",
+  case_study: "case_study",
+  project: "long_form",
+  presentation: "long_form",
+  essay: "long_form",
+};
+
+/**
  * Create an assignment from a topic (and optional resource IDs). Uses global knowledge
  * when no resources provided — per spec clarification.
+ * formatHint: optional UI format (multiple_choice, case_study, essay, etc.); maps to DB type.
  */
 export async function createAssignmentFromTopic(
   topic: string,
-  _resourceIds: string[]
+  _resourceIds: string[],
+  formatHint?: AssignmentFormat
 ): Promise<{ title: string; prompt: string; type: "instant_mcq" | "case_study" | "long_form" }> {
   const openai = getOpenAI();
+  const formatInstruction = formatHint
+    ? ` The user requested format: ${formatHint.replace(/_/g, " ")}. Choose type instant_mcq for multiple choice/mixed quiz, case_study for case study, long_form for short answers, project, presentation, or essay.`
+    : "";
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -155,7 +205,8 @@ export async function createAssignmentFromTopic(
         role: "system",
         content:
           "Given a topic, suggest a short assignment: title, prompt (instructions for the learner), and type (instant_mcq, case_study, or long_form). " +
-          "Return JSON: { title, prompt, type }.",
+          "Return JSON: { title, prompt, type }." +
+          formatInstruction,
       },
       { role: "user", content: `Topic: ${topic}` },
     ],
@@ -172,13 +223,17 @@ export async function createAssignmentFromTopic(
   }
 
   const parsed = JSON.parse(raw) as { title?: string; prompt?: string; type?: string };
+  let type: "instant_mcq" | "case_study" | "long_form" =
+    parsed.type === "instant_mcq" || parsed.type === "case_study"
+      ? parsed.type
+      : "long_form";
+  if (formatHint && FORMAT_TO_TYPE[formatHint]) {
+    type = FORMAT_TO_TYPE[formatHint];
+  }
   return {
     title: typeof parsed.title === "string" ? parsed.title : `Assignment: ${topic}`,
     prompt: typeof parsed.prompt === "string" ? parsed.prompt : `Reflect on: ${topic}.`,
-    type:
-      parsed.type === "instant_mcq" || parsed.type === "case_study"
-        ? parsed.type
-        : "long_form",
+    type,
   };
 }
 

@@ -22,7 +22,7 @@ export function ResourceFeed({ items }: { items: ResourceItem[] }) {
           Resource feed
         </h2>
         <p className="text-[var(--text-muted)]">
-          No resources yet. Add text or upload a file from Resource Library.
+          No resources yet. Add text or upload a file from Interest Library.
         </p>
       </section>
     );

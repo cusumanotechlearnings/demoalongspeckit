@@ -46,9 +46,12 @@ export async function GET(req: NextRequest) {
     content_ref: string;
     thumbnail_ref: string | null;
     extracted_topics: string[];
+    notes: string | null;
+    learning_category: string | null;
+    tags: string[];
     created_at: string;
   }>(
-    `SELECT id, type, title, content_ref, thumbnail_ref, extracted_topics, created_at
+    `SELECT id, type, title, content_ref, thumbnail_ref, extracted_topics, notes, learning_category, tags, created_at
      FROM resources WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
     [session.user.id, limit, offset]
   );
@@ -60,6 +63,9 @@ export async function GET(req: NextRequest) {
     contentRef: r.content_ref,
     thumbnailRef: r.thumbnail_ref ?? undefined,
     extractedTopics: r.extracted_topics ?? [],
+    notes: r.notes ?? undefined,
+    learningCategory: r.learning_category ?? undefined,
+    tags: r.tags ?? [],
     createdAt: r.created_at,
   }));
 
@@ -88,8 +94,20 @@ export async function POST(req: NextRequest) {
   return badRequest("Send JSON { type: 'text', title?, content } or multipart with type and file.");
 }
 
+function parseContextFields(body: Record<string, unknown>) {
+  const title = typeof body.title === "string" ? body.title.trim() || null : null;
+  const notes = typeof body.notes === "string" ? body.notes.trim() || null : null;
+  const learningCategory = typeof body.learningCategory === "string" ? body.learningCategory.trim() || null : null;
+  const tags = Array.isArray(body.tags)
+    ? (body.tags as unknown[]).filter((t): t is string => typeof t === "string").map((t) => t.trim()).filter(Boolean)
+    : typeof body.tags === "string"
+      ? body.tags.split(",").map((t) => t.trim()).filter(Boolean)
+      : [];
+  return { title, notes, learningCategory, tags };
+}
+
 async function createTextResource(req: NextRequest, userId: string): Promise<NextResponse> {
-  let body: { type?: string; title?: string; content?: string };
+  let body: { type?: string; title?: string; content?: string; notes?: string; learningCategory?: string; tags?: string[] | string };
   try {
     body = await req.json();
   } catch {
@@ -106,7 +124,7 @@ async function createTextResource(req: NextRequest, userId: string): Promise<Nex
   }
 
   const id = randomUUID();
-  const title = typeof body.title === "string" ? body.title.trim() || null : null;
+  const { title, notes, learningCategory, tags } = parseContextFields(body);
 
   let extractedTopics: string[] = ["Uncategorized"];
   try {
@@ -116,9 +134,9 @@ async function createTextResource(req: NextRequest, userId: string): Promise<Nex
   }
 
   await execute(
-    `INSERT INTO resources (id, user_id, type, title, content_ref, extracted_topics)
-     VALUES ($1, $2, 'text', $3, $4, $5)`,
-    [id, userId, title, content.slice(0, 100_000), extractedTopics]
+    `INSERT INTO resources (id, user_id, type, title, content_ref, extracted_topics, notes, learning_category, tags)
+     VALUES ($1, $2, 'text', $3, $4, $5, $6, $7, $8)`,
+    [id, userId, title, content.slice(0, 100_000), extractedTopics, notes, learningCategory, tags]
   );
 
   const row = await query<{
@@ -128,9 +146,12 @@ async function createTextResource(req: NextRequest, userId: string): Promise<Nex
     content_ref: string;
     thumbnail_ref: string | null;
     extracted_topics: string[];
+    notes: string | null;
+    learning_category: string | null;
+    tags: string[];
     created_at: string;
   }>(
-    "SELECT id, type, title, content_ref, thumbnail_ref, extracted_topics, created_at FROM resources WHERE id = $1",
+    "SELECT id, type, title, content_ref, thumbnail_ref, extracted_topics, notes, learning_category, tags, created_at FROM resources WHERE id = $1",
     [id]
   ).then((r) => r.rows[0]);
 
@@ -146,6 +167,9 @@ async function createTextResource(req: NextRequest, userId: string): Promise<Nex
       contentRef: row.content_ref,
       thumbnailRef: row.thumbnail_ref ?? undefined,
       extractedTopics: row.extracted_topics ?? [],
+      notes: row.notes ?? undefined,
+      learningCategory: row.learning_category ?? undefined,
+      tags: row.tags ?? [],
       createdAt: row.created_at,
     },
     { status: 201 }
@@ -190,13 +214,20 @@ async function createFileResource(req: NextRequest, userId: string): Promise<Nex
   }
 
   const title = (formData.get("title") as string)?.trim() || null;
+  const notes = (formData.get("notes") as string)?.trim() || null;
+  const learningCategory = (formData.get("learningCategory") as string)?.trim() || null;
+  const tagsRaw = formData.get("tags");
+  const tags = typeof tagsRaw === "string"
+    ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
+    : [];
+
   const id = randomUUID();
   const extractedTopics = ["Uncategorized"]; // async extraction could be added later
 
   await execute(
-    `INSERT INTO resources (id, user_id, type, title, content_ref, thumbnail_ref, extracted_topics)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, userId, type, title, contentRef, thumbnailRef, extractedTopics]
+    `INSERT INTO resources (id, user_id, type, title, content_ref, thumbnail_ref, extracted_topics, notes, learning_category, tags)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [id, userId, type, title, contentRef, thumbnailRef, extractedTopics, notes, learningCategory, tags]
   );
 
   const row = await query<{
@@ -206,9 +237,12 @@ async function createFileResource(req: NextRequest, userId: string): Promise<Nex
     content_ref: string;
     thumbnail_ref: string | null;
     extracted_topics: string[];
+    notes: string | null;
+    learning_category: string | null;
+    tags: string[];
     created_at: string;
   }>(
-    "SELECT id, type, title, content_ref, thumbnail_ref, extracted_topics, created_at FROM resources WHERE id = $1",
+    "SELECT id, type, title, content_ref, thumbnail_ref, extracted_topics, notes, learning_category, tags, created_at FROM resources WHERE id = $1",
     [id]
   ).then((r) => r.rows[0]);
 
@@ -224,6 +258,9 @@ async function createFileResource(req: NextRequest, userId: string): Promise<Nex
       contentRef: row.content_ref,
       thumbnailRef: row.thumbnail_ref ?? undefined,
       extractedTopics: row.extracted_topics ?? [],
+      notes: row.notes ?? undefined,
+      learningCategory: row.learning_category ?? undefined,
+      tags: row.tags ?? [],
       createdAt: row.created_at,
     },
     { status: 201 }
