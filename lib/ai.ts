@@ -39,8 +39,8 @@ export async function generateMCQs(inputText: string): Promise<MCQItem[]> {
         role: "system",
         content:
           "You are a quiz generator. Given content, output exactly 5 multiple-choice questions. " +
-          "Return valid JSON array of objects: { id, question, options (array of 4 strings), correctIndex (0-3) }. " +
-          "Use short ids like q1, q2, ...",
+          "Return valid JSON with an 'items' array of 5 objects. Each object must have: id (e.g. q1, q2), question (string), options (array of exactly 4 strings), correctIndex (0-3). " +
+          "No other keys. Example: {\"items\": [{\"id\":\"q1\",\"question\":\"...\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"correctIndex\":0}, ...]}",
       },
       {
         role: "user",
@@ -53,18 +53,25 @@ export async function generateMCQs(inputText: string): Promise<MCQItem[]> {
   const raw = response.choices[0]?.message?.content;
   if (!raw) throw new Error("AI returned no content");
 
-  const parsed = JSON.parse(raw) as { items?: MCQItem[]; questions?: MCQItem[] };
-  const items = parsed.items ?? parsed.questions ?? [];
-  if (!Array.isArray(items) || items.length < 5) {
+  const parsed = JSON.parse(raw) as Record<string, unknown> | unknown[];
+  // Accept items, questions, or a root-level array
+  const maybeItems = Array.isArray(parsed)
+    ? parsed
+    : (parsed.items ?? parsed.questions ?? null);
+  const items = Array.isArray(maybeItems) ? maybeItems : [];
+  if (items.length === 0) {
     throw new Error("AI did not return 5 MCQ items");
   }
 
-  return items.slice(0, 5).map((item, i) => ({
-    id: (item as MCQItem).id ?? `q${i + 1}`,
-    question: (item as MCQItem).question ?? "",
-    options: Array.isArray((item as MCQItem).options) ? (item as MCQItem).options : [],
-    correctIndex: Number((item as MCQItem).correctIndex) ?? 0,
-  }));
+  return items.slice(0, 5).map((item, i) => {
+    const row = item as Record<string, unknown>;
+    return {
+      id: (typeof row.id === "string" ? row.id : null) ?? `q${i + 1}`,
+      question: typeof row.question === "string" ? row.question : "",
+      options: Array.isArray(row.options) ? (row.options as string[]) : [],
+      correctIndex: Math.max(0, Math.min(3, Number(row.correctIndex) || 0)),
+    };
+  });
 }
 
 /**

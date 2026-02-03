@@ -31,7 +31,7 @@ function SignInForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--surface)]">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
       <div className="w-full max-w-sm rounded-xl border border-[var(--text-muted)]/20 bg-[var(--surface)] p-6 shadow-lg">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">
           Sign in or create an account
@@ -84,7 +84,7 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[var(--surface)] text-[var(--text-muted)]">Loading…</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[var(--background)] text-[var(--text-muted)]">Loading…</div>}>
       <SignInForm />
     </Suspense>
   );
