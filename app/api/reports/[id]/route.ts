@@ -100,7 +100,7 @@ export async function GET(
       let evaluationDetails: Record<string, unknown> | null = null;
 
       // Detect quiz submission
-      let parsedBody: {
+      type QuizSubmissionBody = {
         type?: string;
         score?: number;
         mcqAnswers?: Array<{ itemId: string; selectedIndex: number }>;
@@ -112,14 +112,15 @@ export async function GET(
           correctIndex?: number;
           type?: string;
         }>;
-      } | null = null;
+      };
+      let parsedBody: QuizSubmissionBody | null = null;
       try {
-        parsedBody = JSON.parse(bodyText) as typeof parsedBody;
+        parsedBody = JSON.parse(bodyText) as QuizSubmissionBody | null;
       } catch {
         // Not JSON, treat as long-form
       }
 
-      if (parsedBody?.type === "instant_mcq_quiz" && Array.isArray(parsedBody.quizItems)) {
+      if (parsedBody && parsedBody.type === "instant_mcq_quiz" && Array.isArray(parsedBody.quizItems)) {
         const quizItems = parsedBody.quizItems;
         const mcqAnswers = (parsedBody.mcqAnswers ?? []).reduce(
           (acc, a) => {
