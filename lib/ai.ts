@@ -26,6 +26,19 @@ export type MCQItem = {
   correctIndex: number;
 };
 
+export type ShortAnswerItem = {
+  id: string;
+  type: "short_answer";
+  question: string;
+};
+
+export type QuizItem = (MCQItem & { type?: "mcq" }) | ShortAnswerItem;
+
+/** Type guard for MCQ items */
+export function isMCQItem(item: QuizItem): item is MCQItem {
+  return "options" in item && Array.isArray((item as MCQItem).options);
+}
+
 /**
  * Generate exactly 5 multiple-choice questions from the given text.
  * Used by Instant Challenge (landing) and any on-demand quiz from content.
@@ -72,6 +85,99 @@ export async function generateMCQs(inputText: string): Promise<MCQItem[]> {
       correctIndex: Math.max(0, Math.min(3, Number(row.correctIndex) || 0)),
     };
   });
+}
+
+/**
+ * Generate quiz items with variable count and optional mixed format (MCQ + short answer).
+ * Question count is inferred from context (e.g. "lengthy test" → 12–15, "quick quiz" → 5–7).
+ */
+export async function generateQuizItems(
+  inputText: string,
+  options: {
+    format?: "multiple_choice" | "mixed_format";
+    topic?: string;
+  } = {}
+): Promise<QuizItem[]> {
+  const openai = getOpenAI();
+  const { format = "multiple_choice", topic = "" } = options;
+
+  const formatInstruction =
+    format === "mixed_format"
+      ? "Include a MIX of multiple-choice questions (with options and correctIndex) AND short-answer questions (no options). " +
+        "Short-answer items must have type: 'short_answer' and only question (no options, no correctIndex). " +
+        "Aim for roughly 60% multiple choice and 40% short answer. Vary the order."
+      : "Include ONLY multiple-choice questions. Each must have: options (array of 4 strings), correctIndex (0-3).";
+
+  const countInstruction =
+    "Determine the appropriate number of questions (min 5, max 25) based on context: " +
+    "if the user asked for a 'lengthy', 'comprehensive', or 'long' test, use 12-20 questions; " +
+    "if 'quick', 'short', or 'brief', use 5-7; " +
+    "otherwise use 8-12 questions. Match the count to what makes sense for the topic and user intent.";
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a quiz generator. Given content/topic, generate quiz questions. " +
+          "Return valid JSON with an 'items' array. " +
+          formatInstruction +
+          " " +
+          countInstruction +
+          " Each object needs: id (e.g. q1), question (string). " +
+          "For multiple-choice: options (4 strings), correctIndex (0-3). " +
+          "For short-answer: type must be 'short_answer', no options. " +
+          "Example MCQ: {\"id\":\"q1\",\"question\":\"...\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"correctIndex\":0} " +
+          "Example short-answer: {\"id\":\"q2\",\"type\":\"short_answer\",\"question\":\"Explain...\"}",
+      },
+      {
+        role: "user",
+        content: `Context: ${topic ? `Topic: ${topic}. ` : ""}${inputText.slice(0, 8000)}`,
+      },
+    ],
+    response_format: { type: "json_object" },
+  });
+
+  const raw = response.choices[0]?.message?.content;
+  if (!raw) throw new Error("AI returned no content");
+
+  const parsed = JSON.parse(raw) as Record<string, unknown> | unknown[];
+  const maybeItems = Array.isArray(parsed)
+    ? parsed
+    : (parsed.items ?? parsed.questions ?? null);
+  const rawItems = Array.isArray(maybeItems) ? maybeItems : [];
+  if (rawItems.length === 0) throw new Error("AI did not return quiz items");
+
+  const result: QuizItem[] = [];
+  for (let i = 0; i < Math.min(rawItems.length, 25); i++) {
+    const row = rawItems[i] as Record<string, unknown>;
+    const id = (typeof row.id === "string" ? row.id : null) ?? `q${i + 1}`;
+    const question = typeof row.question === "string" ? row.question : "";
+    if (!question) continue;
+
+    if (row.type === "short_answer" || (format === "mixed_format" && !row.options)) {
+      result.push({ id, type: "short_answer", question } as ShortAnswerItem);
+    } else if (Array.isArray(row.options) && row.options.length >= 2) {
+      result.push({
+        id,
+        question,
+        options: row.options as string[],
+        correctIndex: Math.max(
+          0,
+          Math.min((row.options as string[]).length - 1, Number(row.correctIndex) || 0)
+        ),
+      } as MCQItem);
+    }
+  }
+  if (result.length < 5) {
+    const fallback = await generateMCQs(inputText);
+    const need = 5 - result.length;
+    for (let i = 0; i < need && i < fallback.length; i++) {
+      result.push(fallback[i]);
+    }
+  }
+  return result;
 }
 
 /**
@@ -235,6 +341,61 @@ export async function createAssignmentFromTopic(
     prompt: typeof parsed.prompt === "string" ? parsed.prompt : `Reflect on: ${topic}.`,
     type,
   };
+}
+
+export type ShortAnswerEvaluation = {
+  question: string;
+  userAnswer: string;
+  evaluation: string;
+  score?: number;
+};
+
+/**
+ * Evaluate short-answer responses using AI. Returns feedback for each response.
+ */
+export async function gradeShortAnswers(
+  items: { question: string; userAnswer: string }[]
+): Promise<ShortAnswerEvaluation[]> {
+  if (items.length === 0) return [];
+
+  const openai = getOpenAI();
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You evaluate short-answer quiz responses. For each question and answer, provide brief constructive feedback (2-3 sentences) and a score from 0-100. " +
+          "Return JSON: { evaluations: [{ question, userAnswer, evaluation, score }] }. score must be 0-100. Match the order of input items.",
+      },
+      {
+        role: "user",
+        content: JSON.stringify(items.slice(0, 15)),
+      },
+    ],
+    response_format: { type: "json_object" },
+  });
+
+  const raw = response.choices[0]?.message?.content;
+  if (!raw) {
+    return items.map((i) => ({
+      question: i.question,
+      userAnswer: i.userAnswer,
+      evaluation: "Evaluation unavailable.",
+    }));
+  }
+
+  const parsed = JSON.parse(raw) as { evaluations?: ShortAnswerEvaluation[] };
+  const evals = Array.isArray(parsed.evaluations) ? parsed.evaluations : [];
+  return items.map((item, i) => {
+    const s = evals[i]?.score;
+    return {
+      question: item.question,
+      userAnswer: item.userAnswer,
+      evaluation: evals[i]?.evaluation ?? "No feedback available.",
+      score: typeof s === "number" ? Math.min(100, Math.max(0, s)) : 70,
+    };
+  });
 }
 
 /**

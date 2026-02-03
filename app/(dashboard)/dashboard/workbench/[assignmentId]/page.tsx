@@ -23,9 +23,10 @@ export default async function WorkbenchPage({
     type: string;
     title: string | null;
     prompt: string | null;
+    topic: string | null;
     status: string;
   }>(
-    "SELECT id, type, title, prompt, status FROM assignments WHERE id = $1 AND user_id = $2",
+    "SELECT id, type, title, prompt, topic, status FROM assignments WHERE id = $1 AND user_id = $2",
     [assignmentId, session.user.id]
   );
 
@@ -52,6 +53,7 @@ export default async function WorkbenchPage({
         assignmentId={assignment.id}
         assignmentTitle={assignment.title ?? undefined}
         assignmentPrompt={assignment.prompt ?? undefined}
+        assignmentTopic={assignment.topic ?? undefined}
         assignmentType={assignment.type}
         draftSubmissionId={draft?.id}
         initialBodyText={draft?.body_text ?? ""}
