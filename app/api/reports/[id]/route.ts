@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { queryOne, execute } from "@/lib/db";
-import { gradeSubmission, gradeShortAnswers, isMCQItem } from "@/lib/ai";
+import { gradeSubmission, gradeShortAnswers } from "@/lib/ai";
 import { unauthorized, notFound } from "@/lib/api";
 import { randomUUID } from "crypto";
 
@@ -100,54 +100,68 @@ export async function GET(
       let evaluationDetails: Record<string, unknown> | null = null;
 
       // Detect quiz submission
-      type QuizSubmissionBody = {
-        type?: string;
-        score?: number;
-        mcqAnswers?: Array<{ itemId: string; selectedIndex: number }>;
-        shortAnswers?: Record<string, string>;
-        quizItems?: Array<{
+      let parsedBody: Record<string, unknown> | null = null;
+      try {
+        const raw = JSON.parse(bodyText);
+        parsedBody = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : null;
+      } catch {
+        // Not JSON, treat as long-form
+      }
+
+      const isQuizSubmission =
+        parsedBody !== null &&
+        parsedBody.type === "instant_mcq_quiz" &&
+        Array.isArray(parsedBody.quizItems);
+
+      if (isQuizSubmission && parsedBody) {
+        const body = parsedBody;
+        const quizItems = body.quizItems as Array<{
           id: string;
           question: string;
           options?: string[];
           correctIndex?: number;
           type?: string;
         }>;
-      };
-      let parsedBody: QuizSubmissionBody | null = null;
-      try {
-        parsedBody = JSON.parse(bodyText) as QuizSubmissionBody | null;
-      } catch {
-        // Not JSON, treat as long-form
-      }
-
-      if (parsedBody && parsedBody.type === "instant_mcq_quiz" && Array.isArray(parsedBody.quizItems)) {
-        const quizItems = parsedBody.quizItems;
-        const mcqAnswers = (parsedBody.mcqAnswers ?? []).reduce(
-          (acc, a) => {
-            acc[a.itemId] = a.selectedIndex;
+        const mcqAnswersRaw = body.mcqAnswers;
+        const mcqAnswersList = Array.isArray(mcqAnswersRaw) ? mcqAnswersRaw : [];
+        const mcqAnswers = mcqAnswersList.reduce(
+          (acc: Record<string, number>, a: { itemId?: string; selectedIndex?: number }) => {
+            if (a && typeof a.itemId === "string" && typeof a.selectedIndex === "number") {
+              acc[a.itemId] = a.selectedIndex;
+            }
             return acc;
           },
           {} as Record<string, number>
         );
-        const shortAnswers = parsedBody.shortAnswers ?? {};
+        const shortAnswersRaw = body.shortAnswers;
+        const shortAnswers: Record<string, string> =
+          shortAnswersRaw && typeof shortAnswersRaw === "object" && !Array.isArray(shortAnswersRaw)
+            ? (shortAnswersRaw as Record<string, string>)
+            : {};
 
         const mcqFeedback: McqFeedbackItem[] = [];
         let mcqCorrect = 0;
         let mcqTotal = 0;
 
         for (const item of quizItems) {
-          if (isMCQItem(item)) {
+          const normalized = {
+            ...item,
+            options: item.options ?? [],
+            correctIndex: item.correctIndex ?? 0,
+          };
+          if (normalized.options.length >= 2) {
             mcqTotal++;
-            const userIdx = mcqAnswers[item.id];
-            const correct = userIdx === item.correctIndex;
+            const userIdx = mcqAnswers[normalized.id];
+            const correctIdx = normalized.correctIndex ?? 0;
+            const correct = userIdx === correctIdx;
             if (correct) mcqCorrect++;
             mcqFeedback.push({
-              question: item.question,
-              options: item.options,
-              correctIndex: item.correctIndex,
+              question: normalized.question,
+              options: normalized.options,
+              correctIndex: correctIdx,
               userSelectedIndex: typeof userIdx === "number" ? userIdx : -1,
               correct,
-              correctAnswerText: item.options[item.correctIndex],
+              correctAnswerText: normalized.options[correctIdx],
             });
           }
         }
