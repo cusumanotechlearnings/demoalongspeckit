@@ -16,7 +16,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--surface)]">
+    <div className="flex min-h-screen bg-[var(--background)]">
       <DashboardNav />
       <main className="flex-1 p-6 text-[var(--text-primary)]">{children}</main>
     </div>

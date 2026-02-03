@@ -52,7 +52,7 @@ export function ActionHub({ resourceSummary = "" }: { resourceSummary?: string }
           </label>
           <button
             type="submit"
-            className="rounded-lg bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--surface)] hover:opacity-90"
+            className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-medium text-white hover:opacity-90"
           >
             Generate
           </button>

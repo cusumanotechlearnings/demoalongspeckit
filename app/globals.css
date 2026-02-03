@@ -1,14 +1,27 @@
 @import "tailwindcss";
 
-/* Synthesis: Modern Laboratory design system — dark calming blue primary, green accent */
+/* The Forge: "Modern Academic" — Paper White background, Deep Navy primary, Growth Green & Alert Orange accents */
 :root {
-  --surface: #0f172a;       /* Deep Slate — calm, focused */
-  --primary: #1e40af;      /* Dark calming blue — main actions, nav, buttons */
-  --secondary: #10b981;    /* Emerald green — accent, highlights, progress */
-  --text-primary: #f8fafc; /* Off-white */
-  --text-muted: #94a3b8;   /* Muted blue-grey */
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  /* Background: Paper White / Soft Slate — reduces eye strain, not pure white */
+  --background: #f8f9fa;
+  --surface: #ffffff;
+  --surface-subtle: #f1f5f9;
+
+  /* Primary: Deep Navy / Intellectual Blue — authority, stability, productivity */
+  --primary: #1e3a5f;
+
+  /* Secondary: Growth Green — success states, progress, "knowledge gap filled" */
+  --secondary: #059669;
+
+  /* Accent: Alert Orange — CTAs only (e.g. Generate Assignment) for mental energy */
+  --accent: #ea580c;
+
+  /* Text */
+  --text-primary: #1e293b;
+  --text-muted: #64748b;
+
+  /* Legacy aliases for body */
+  --foreground: var(--text-primary);
 }
 
 @theme inline {
@@ -17,14 +30,21 @@
   --color-surface: var(--surface);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
   --color-text-primary: var(--text-primary);
   --color-text-muted: var(--text-muted);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-poppins), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Headings use geometric sans for "Modern Academic" look */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
 }

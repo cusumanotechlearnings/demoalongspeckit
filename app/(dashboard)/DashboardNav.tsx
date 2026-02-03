@@ -9,13 +9,13 @@ const nav = [
 
 export function DashboardNav() {
   return (
-    <aside className="w-56 border-r border-[var(--text-muted)]/20 bg-[var(--surface)]">
+    <aside className="w-56 border-r border-[var(--text-muted)]/20 bg-[var(--surface)] shadow-sm">
       <nav className="flex flex-col gap-1 p-4">
         <Link
           href="/"
           className="mb-2 text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)]"
         >
-          ← Synthesis
+          ← The Forge
         </Link>
         {nav.map(({ href, label }) => (
           <Link
