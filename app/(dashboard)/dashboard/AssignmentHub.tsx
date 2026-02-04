@@ -47,7 +47,7 @@ export function AssignmentHub() {
     <section className="rounded-xl border border-[var(--text-muted)]/20 bg-[var(--surface)] p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-bold text-[var(--text-primary)]">
-          Assignment Hub
+          Student Assignment Hub
         </h2>
         <select
           value={statusFilter}
@@ -62,7 +62,7 @@ export function AssignmentHub() {
         </select>
       </div>
       <p className="mb-3 text-sm text-[var(--text-muted)]">
-        Explore all your assignments. Open any to continue in the workbench.
+        Explore all your assignments. Open any assignment you wish to continue in the workbench.
       </p>
       {loading ? (
         <p className="text-sm text-[var(--text-muted)]">Loading…</p>
