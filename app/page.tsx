@@ -68,7 +68,7 @@ export default function Home() {
             </Link>
             <Link
               href="#try-a-test"
-              className="rounded-lg bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+              className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
             >
               Try a test
             </Link>
@@ -76,7 +76,7 @@ export default function Home() {
         ) : (
           <Link
             href="/dashboard"
-            className="rounded-lg bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
           >
             Dashboard
           </Link>
@@ -93,7 +93,7 @@ export default function Home() {
             Turn consumption into mastery.
           </p>
           <p className="mt-6 text-[var(--text-primary)]">
-            Save what you read and learn. Get AI-generated quizzes and assignments
+            Move from passive consumption to active learning. Save what you read and learn. Get AI-generated quizzes and assignments
             from your resources, track your progress with Growth Reports, and
             close gaps with targeted follow-up. The Forge turns your notes and
             uploads into a personal learning system.
@@ -103,13 +103,13 @@ export default function Home() {
               <>
                 <Link
                   href="/auth/signin?callbackUrl=/dashboard"
-                  className="w-full rounded-lg bg-[var(--primary)] px-6 py-3 text-center font-medium text-white hover:opacity-90 sm:w-auto"
+                  className="w-full rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:opacity-90 sm:w-auto"
                 >
                   Create an account
                 </Link>
                 <Link
                   href="#try-a-test"
-                  className="w-full rounded-lg border border-[var(--text-muted)]/40 bg-[var(--surface)] px-6 py-3 text-center font-medium text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] sm:w-auto"
+                  className="w-full rounded-lg border border-[var(--text-muted)]/40 bg-surface px-6 py-3 text-center font-medium text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] sm:w-auto"
                 >
                   Try a test
                 </Link>
@@ -117,7 +117,7 @@ export default function Home() {
             ) : (
               <Link
                 href="/dashboard"
-                className="w-full rounded-lg bg-[var(--primary)] px-6 py-3 text-center font-medium text-white hover:opacity-90 sm:w-auto"
+                className="w-full rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:opacity-90 sm:w-auto"
               >
                 Go to Dashboard
               </Link>
