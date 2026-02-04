@@ -73,4 +73,6 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Required on Vercel: trust X-Forwarded-Host so callbacks work behind the proxy
+  ...(process.env.VERCEL && { trustHost: true }),
 };

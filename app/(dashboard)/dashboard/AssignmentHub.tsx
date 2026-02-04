@@ -62,7 +62,7 @@ export function AssignmentHub() {
         </select>
       </div>
       <p className="mb-3 text-sm text-[var(--text-muted)]">
-        Explore all your assignments. Open any to continue in the workbench.
+        Explore all your assignments. Open any assignment to continue in the workbench.
       </p>
       {loading ? (
         <p className="text-sm text-[var(--text-muted)]">Loading…</p>
