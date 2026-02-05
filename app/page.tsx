@@ -87,13 +87,13 @@ export default function Home() {
         {/* Hero & sell */}
         <section className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl">
-            The Forge
+            Forge Ahead
           </h1>
           <p className="mt-3 text-xl text-[var(--text-muted)]">
             Turn consumption into mastery.
           </p>
           <p className="mt-6 text-[var(--text-primary)]">
-            Move from passive consumption to active learning. Save what you read and learn. Get AI-generated quizzes and assignments
+            Turn your consumption into mastery.Save what you read and learn. Get AI-generated quizzes and assignments from your resources, track your progress with Growth Reports, and close gaps with targeted follow-up. The Forge turns your notes and uploads into a personal learning system.
             from your resources, track your progress with Growth Reports, and
             close gaps with targeted follow-up. The Forge turns your notes and
             uploads into a personal learning system.
