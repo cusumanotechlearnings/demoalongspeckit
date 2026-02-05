@@ -94,7 +94,7 @@ export default function Home() {
           </p>
           <p className="mt-6 text-[var(--text-primary)]">
             Turn your consumption into mastery.Save what you read and learn. Get AI-generated quizzes and assignments from your resources, track your progress with Growth Reports, and close gaps with targeted follow-up. The Forge turns your notes and uploads into a personal learning system.
-            from your resources, track your progress with Growth Reports, and
+            from your resources. Track your progress with Growth Reports, and
             close gaps with targeted follow-up. The Forge turns your notes and
             uploads into a personal learning system.
           </p>
