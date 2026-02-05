@@ -1,24 +1,32 @@
 @import "tailwindcss";
 
-/* The Forge: "Modern Academic" — Paper White background, Deep Navy primary, Growth Green & Alert Orange accents */
+/* The Forge: palette — cream background, vibrant blue primary, growth green, soft blues */
 :root {
-  /* Background: Paper White / Soft Slate — reduces eye strain, not pure white */
-  --background: #f8f9fa;
+  /* Palette */
+  --palette-light-blue: #90D5FF;
+  --palette-cream: #FAF6EB;
+  --palette-vibrant-blue: #2A96E8;
+  --palette-muted-blue: #77B1D4;
+  --palette-green: #6BE858;
+  --palette-pale-cyan: #E8FFFF;
+
+  /* Background: cream / pale cyan */
+  --background: var(--palette-cream);
   --surface: #ffffff;
-  --surface-subtle: #f1f5f9;
+  --surface-subtle: var(--palette-pale-cyan);
 
-  /* Primary: dark navy blue for CTAs */
-  --primary: #1e3a5f;
+  /* Primary: vibrant blue for CTAs and links */
+  --primary: var(--palette-vibrant-blue);
 
-  /* Secondary: Growth Green — success states, progress, "knowledge gap filled" */
-  --secondary: #059669;
+  /* Secondary: growth green — success, progress */
+  --secondary: var(--palette-green);
 
-  /* Accent: Alert Orange — CTAs only (e.g. Generate Assignment) for mental energy */
-  --accent: #ea580c;
+  /* Accent: muted blue — secondary actions, highlights */
+  --accent: var(--palette-muted-blue);
 
   /* Text */
   --text-primary: #1e293b;
-  --text-muted: #64748b;
+  --text-muted: #5c7a94;
 
   /* Legacy aliases for body */
   --foreground: var(--text-primary);
